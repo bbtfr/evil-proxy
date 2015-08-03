@@ -1,6 +1,6 @@
-# Evil::Proxy
+# EvilProxy
 
-A ruby http proxy to do EVIL things.
+A ruby http proxy to do :imp: things.
 
 ## Installation
 
@@ -18,11 +18,51 @@ Or install it yourself as:
 
 ## Usage
 
+#### Basic usage: hooks
+
 ```ruby
+require 'evil-proxy'
+
 # EvilProxy::HTTPProxyServer is a subclass of Webrick::HTTPProxyServer
 # it takes the same parameters
 proxy = EvilProxy::HTTPProxyServer.new Port: 8080
 
+proxy.before_request do |req|
+  # Do evil things
+  # Note that, different from Webrick::HTTPProxyServer, 
+  #   `req.body` is writable
+end
+
+proxy.before_response do |req, res|
+  # Here `res.body` is also writable
+end
+
+trap 'INT'  do proxy.shutdown end
+trap 'TERM' do proxy.shutdown end
+
+proxy.start
+```
+
+Available hooks including `when_initialize`, `when_start`, `when_shutdown`, 
+  `before_request`, `before_response`, `(before|after)_(get|head|post|options|connect)`
+
+#### Plugin: store
+  
+If you want to save the network traffic, you can use `store` plugin,
+  network traffic will be saved in `store.yml`
+```ruby
+require 'evil-proxy'
+require 'evil-proxy/store'
+
+proxy = EvilProxy::HTTPProxyServer.new Port: 8080
+
+proxy.store_filter do |req, res|
+  # Optional, if you don't set `store_filter`, evil-proxy
+  #   will save all the network traffic
+  res.unparsed_uri =~ /www.google.com/
+end
+
+...
 ```
 
 ## Contributing

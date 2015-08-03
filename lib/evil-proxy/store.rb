@@ -12,16 +12,16 @@ EvilProxy::HTTPProxyServer.class_eval do
   end
 
   before_response do |req, res|
-    @store << [ req, res ] if match_store_filter req
+    @store << [ req, res ] if match_store_filter req, res
   end
 
   def store_filter &block
     @store_filter = block
   end
 
-  def match_store_filter req
+  def match_store_filter req, res
     return true unless @store_filter
-    instance_exec req, &@store_filter
+    instance_exec req, res, &@store_filter
   end
 
   def clean_store

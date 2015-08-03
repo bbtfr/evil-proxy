@@ -23,30 +23,30 @@ Or install it yourself as:
 ```ruby
 require 'evil-proxy'
 
-# EvilProxy::HTTPProxyServer is a subclass of Webrick::HTTPProxyServer
-# it takes the same parameters
+# EvilProxy::HTTPProxyServer is a subclass of Webrick::HTTPProxyServer;
+#   it takes the same parameters.
 proxy = EvilProxy::HTTPProxyServer.new Port: 8080
 
 proxy.before_request do |req|
   # Do evil things
   # Note that, different from Webrick::HTTPProxyServer, 
-  #   `req.body` is writable
+  #   `req.body` is writable.
 end
 
 proxy.before_response do |req, res|
-  # Here `res.body` is also writable
+  # Here `res.body` is also writable.
 end
 
 proxy.start
 ```
 
 Available hooks including `when_initialize`, `when_start`, `when_shutdown`, 
-  `before_request`, `before_response`, `(before|after)_(get|head|post|options|connect)`
+  `before_request`, `before_response`, `(before|after)_(get|head|post|options|connect)`.
 
 #### Plugin: store
   
 If you want to save the network traffic, you can use `store` plugin,
-  network traffic will be saved in `store.yml`
+  network traffic will be saved in `store.yml`.
 ```ruby
 require 'evil-proxy'
 require 'evil-proxy/store'
@@ -55,7 +55,7 @@ proxy = EvilProxy::HTTPProxyServer.new Port: 8080
 
 proxy.store_filter do |req, res|
   # Optional, if you don't set `store_filter`, evil-proxy
-  #   will save all the network traffic
+  #   will save all the network traffic.
   res.unparsed_uri =~ /www.google.com/
 end
 
@@ -63,10 +63,30 @@ end
 ```
 
 #### Plugin: async
-Start the proxy server asnychronously, which means start server in a background thread.
+Start the proxy server asnychronously, which means start server in a background thread;
+with it, you can check the `store` when runing the proxy server.
+```ruby
+require 'evil-proxy'
+require 'evil-proxy/async'
+require 'evil-proxy/store'
+require 'yaml'
+
+proxy = EvilProxy::HTTPProxyServer.new Port: 8080
+
+proxy.start
+
+loop do
+  # Do something with `proxy.store`
+  puts proxy.store.to_yaml
+  proxy.clean_store # if needed
+  sleep 10
+end
+
+...
+```
 
 #### Plugin: selenium
-Use `proxy.selenium_proxy` to create a instance of `Selenium::WebDriver::Proxy`
+Use `proxy.selenium_proxy` to create a instance of `Selenium::WebDriver::Proxy`.
 
 ```ruby
 require 'evil-proxy'

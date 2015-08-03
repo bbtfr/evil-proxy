@@ -1,6 +1,6 @@
 # Evil::Proxy
 
-TODO: Write a gem description
+A ruby http proxy to do EVIL things.
 
 ## Installation
 
@@ -18,11 +18,16 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+# EvilProxy::HTTPProxyServer is a subclass of Webrick::HTTPProxyServer
+# it takes the same parameters
+proxy = EvilProxy::HTTPProxyServer.new Port: 8080
+
+```
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/evil-proxy/fork )
+1. Fork it ( https://github.com/bbtfr/evil-proxy/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

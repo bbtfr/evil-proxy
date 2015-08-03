@@ -37,9 +37,6 @@ proxy.before_response do |req, res|
   # Here `res.body` is also writable
 end
 
-trap 'INT'  do proxy.shutdown end
-trap 'TERM' do proxy.shutdown end
-
 proxy.start
 ```
 
@@ -64,6 +61,26 @@ end
 
 ...
 ```
+
+#### Plugin: async
+Start the proxy server asnychronously, which means start server in a background thread.
+
+#### Plugin: selenium
+Use `proxy.selenium_proxy` to create a instance of `Selenium::WebDriver::Proxy`
+
+```ruby
+require 'evil-proxy'
+require 'evil-proxy/selenium'
+require 'selenium/webdriver'
+
+proxy = EvilProxy::HTTPProxyServer.new Port: 8080
+proxy.start
+
+driver = Selenium::WebDriver.for :chrome, proxy: proxy.selenium_proxy
+
+...
+```
+
 
 ## Contributing
 

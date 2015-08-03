@@ -37,6 +37,9 @@ proxy.before_response do |req, res|
   # Here `res.body` is also writable.
 end
 
+trap "INT"  do proxy.shutdown end
+trap "TERM" do proxy.shutdown end
+
 proxy.start
 ```
 

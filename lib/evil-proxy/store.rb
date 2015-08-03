@@ -25,7 +25,7 @@ EvilProxy::HTTPProxyServer.class_eval do
   end
 
   def clean_store
-    @store.clear
+    @store = []
   end
 
   def dump_store filename = "store.yml"

@@ -12,13 +12,12 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
   end
 
   def start
-    fire :when_start
-    super
-  end
-
-  def shutdown
-    fire :when_shutdown
-    super
+    begin
+      fire :when_start
+      super
+    ensure
+      fire :when_shutdown
+    end
   end
 
   def fire key, *args

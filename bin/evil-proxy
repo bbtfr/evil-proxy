@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require 'evil-proxy'
+
+logger = WEBrick::Log.new(nil, 5)
+
+proxy = EvilProxy::MITMProxyServer.new Port: 8080, Logger: logger
+proxy.start

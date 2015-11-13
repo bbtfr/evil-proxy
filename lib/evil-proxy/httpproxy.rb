@@ -2,12 +2,14 @@ require 'webrick'
 require 'webrick/httpproxy'
 
 class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
+  attr_reader :callbacks
+
   VALID_CALBACKS = Array.new
   DEFAULT_CALLBACKS = Hash.new
 
-  def initialize *args
-    initialize_callbacks
-    fire :when_initialize, *args
+  def initialize config = {}, default = WEBrick::Config::HTTP
+    initialize_callbacks config
+    fire :when_initialize, config, default
     super
   end
 
@@ -27,7 +29,7 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     end
   end
 
-  def proxy_service req, res
+  def service req, res
     fire :before_request, req
     super
     fire :before_response, req, res
@@ -64,7 +66,7 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
   end
 
 private
-  def initialize_callbacks
+  def initialize_callbacks config
     @callbacks = Hash.new
     DEFAULT_CALLBACKS.each do |key, callbacks|
       @callbacks[key] = callbacks.clone

@@ -1,6 +1,6 @@
 # EvilProxy
 
-A ruby http proxy to do :imp: things.
+A ruby http/https proxy, with SSL MITM support to do :imp: things.
 
 ## Installation
 
@@ -17,6 +17,45 @@ Or install it yourself as:
     $ gem install evil-proxy
 
 ## Usage
+
+#### MITMProxyServer
+`MITMProxyServer` is a subclass of `HTTPProxyServer`, so it also has the callback & plugin system, this proxy will embed a mini CA, which generates certificates on the fly, so you may need to import the CA certificate (./certs/CA/cacert.pem) into your browser.
+
+```ruby
+require 'evil-proxy'
+
+proxy = EvilProxy::MITMProxyServer.new Port: 8080
+proxy.start
+```
+
+Without import the CA certificate
+```shell
+$ https_proxy=http://localhost:8080 curl https://github.com
+# =>
+# curl: (60) SSL certificate problem: Invalid certificate chain
+# More details here: http://curl.haxx.se/docs/sslcerts.html
+# 
+# curl performs SSL certificate verification by default, using a "bundle"
+#  of Certificate Authority (CA) public keys (CA certs). If the default
+#  bundle file isn't adequate, you can specify an alternate file
+#  using the --cacert option.
+# If this HTTPS server uses a certificate signed by a CA represented in
+#  the bundle, the certificate verification probably failed due to a
+#  problem with the certificate (it might be expired, or the name might
+#  not match the domain name in the URL).
+# If you'd like to turn off curl's verification of the certificate, use
+#  the -k (or --insecure) option.
+```
+
+```shell
+$ https_proxy=http://localhost:8080 curl https://github.com --insecure
+# =>
+# <!DOCTYPE html>
+# <html lang="en" class="">
+# ...
+```
+
+So you can intercept and modify https traffic, ie: requests & responses.
 
 #### Basic usage: hooks
 

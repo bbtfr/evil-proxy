@@ -26,6 +26,17 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     end
   end
 
+  def stop
+    self.logger.info "#{self.class}#stop: pid=#{$$}"
+    super
+  end
+
+  def restart &block
+    self.logger.info "#{self.class}#restart: pid=#{$$}" if @status == :Running
+    @callbacks = Hash.new
+    instance_exec &block if block
+  end
+
   def fire key, *args
     return unless @callbacks[key]
     @callbacks[key].each do |callback|

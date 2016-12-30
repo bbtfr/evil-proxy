@@ -103,12 +103,19 @@ class EvilProxy::MITMProxyServer < EvilProxy::HTTPProxyServer
     end
   end
 
+  define_callback_methods :before_mitm
+  define_callback_methods :after_mitm
+
   def do_MITM req, res
+    fire :before_mitm, req
+
     host, port = req.unparsed_uri.split(":")
     port ||= 443
 
     mitm_port = start_mitm_server host, port
     req.unparsed_uri = "127.0.0.1:#{mitm_port}"
+
+    fire :after_mitm, req, res
   end
 
   def do_CONNECT req, res

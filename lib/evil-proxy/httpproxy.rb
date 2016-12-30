@@ -4,7 +4,6 @@ require 'webrick/httpproxy'
 class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
   attr_reader :callbacks
 
-  VALID_CALBACKS = Array.new
   DEFAULT_CALLBACKS = Hash.new
 
   def initialize config = {}, default = WEBrick::Config::HTTP
@@ -31,9 +30,14 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     super
   end
 
+  def exit
+    self.logger.info "#{self.class}#exit: pid=#{$$}"
+    Kernel.exit
+  end
+
   def restart &block
     self.logger.info "#{self.class}#restart: pid=#{$$}" if @status == :Running
-    @callbacks = Hash.new
+    initialize_callbacks Hash.new
     instance_exec &block if block
   end
 
@@ -50,11 +54,23 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     fire :before_response, req, res
   end
 
-  VALID_CALBACKS << :when_initialize
-  VALID_CALBACKS << :when_start
-  VALID_CALBACKS << :when_shutdown
-  VALID_CALBACKS << :before_request
-  VALID_CALBACKS << :before_response
+  def self.define_callback_methods callback
+    define_method callback do |&block|
+      @callbacks[callback] ||= []
+      @callbacks[callback] << block
+    end
+
+    define_singleton_method callback do |&block|
+      DEFAULT_CALLBACKS[callback] ||= []
+      DEFAULT_CALLBACKS[callback] << block
+    end
+  end
+
+  define_callback_methods :when_initialize
+  define_callback_methods :when_start
+  define_callback_methods :when_shutdown
+  define_callback_methods :before_request
+  define_callback_methods :before_response
 
   %w(GET HEAD POST OPTIONS CONNECT).each do |method|
     do_method = "do_#{method}".to_sym
@@ -62,21 +78,14 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     before_method = "before_#{method.downcase}".to_sym
     after_method = "after_#{method.downcase}".to_sym
 
-    VALID_CALBACKS << before_method
-    VALID_CALBACKS << after_method
+    define_callback_methods before_method
+    define_callback_methods after_method
 
     alias_method do_method_without_callbacks, do_method
     define_method do_method do |req, res|
       fire before_method, req
       send do_method_without_callbacks, req, res
       fire after_method, req, res
-    end
-  end
-
-  VALID_CALBACKS.each do |callback|
-    define_method callback do |&block|
-      @callbacks[callback] ||= []
-      @callbacks[callback] << block
     end
   end
 
@@ -87,14 +96,4 @@ private
       @callbacks[key] = callbacks.clone
     end
   end
-
-  class << self
-    VALID_CALBACKS.each do |callback|
-      define_method callback do |&block|
-        DEFAULT_CALLBACKS[callback] ||= []
-        DEFAULT_CALLBACKS[callback] << block
-      end
-    end
-  end
-
 end

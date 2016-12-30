@@ -1,5 +1,5 @@
 PROXY.restart do
-  @mitm_pattern = /pattern/
+  @mitm_pattern = /partten/
 end
 
 # PROXY.before_response do |req, res|

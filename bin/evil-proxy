@@ -18,6 +18,7 @@ fullpath = File.expand_path file, File.dirname(__FILE__)
 require fullpath
 
 interrupted = false
+stoped = false
 Signal.trap("INT") do
   print "\r" # cleanup ^C
   Thread.new do
@@ -27,6 +28,8 @@ Signal.trap("INT") do
 
   if interrupted # double CTRL-C to quit full program
     PROXY.stop
+    PROXY.exit if stoped
+    stoped = true
   else
     interrupted = true
     PROXY.logger.info "RELOAD #{file}, double CTRL-C to quit full program"

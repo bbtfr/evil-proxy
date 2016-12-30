@@ -1,8 +1,33 @@
+# encoding: utf-8
 #!/usr/bin/env ruby
 
 require 'evil-proxy'
+require 'active_support/all'
+require 'colorize'
 
-logger = WEBrick::Log.new(nil, 5)
+PROXY = EvilProxy::MITMProxyServer.new Port: 8080#, AccessLog: []
+# PROXY = EvilProxy::HTTPProxyServer.new Port: 8080, AccessLog: []
 
-proxy = EvilProxy::MITMProxyServer.new Port: 8080, Logger: logger
-proxy.start
+def puts_include str, match
+  puts str.inspect.colorize(:red) if str && str.include?(match)
+end
+
+file = ARGV.first || 'evil-proxy'
+file = "#{file}.rb"
+fullpath = File.expand_path file, File.dirname(__FILE__)
+require fullpath
+
+interrupted = false
+Signal.trap("INT") do
+  exit if interrupted # double CTRL-C to quit full program
+  interrupted = true
+  Thread.new do
+    sleep 1
+    interrupted = false
+  end
+
+  puts "RELOAD #{file}, double CTRL-C to quit full program"
+  load fullpath
+end
+
+PROXY.start

@@ -10,6 +10,10 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
   def initialize config = {}, default = WEBrick::Config::HTTP
     initialize_callbacks config
     fire :when_initialize, config, default
+    config.merge!(
+      Logger: WEBrick::Log.new(nil, 0),
+      AccessLog: []
+    ) if config[:Quiet]
     super
   end
 

@@ -6,13 +6,14 @@ class EvilProxy::MITMProxyServer < EvilProxy::HTTPProxyServer
 
   def initialize config
     super
+    @mitm_pattern = config[:MITMPattern]
     @mitm_servers = {}
     @mitm_port = 4433
   end
 
   def ca
     return @ca if @ca
-    logger.info "Create CA"
+    logger.info "Create CA root cert"
 
     ca_config = {}
     ca_config[:hostname] = 'ca'
@@ -70,6 +71,9 @@ class EvilProxy::MITMProxyServer < EvilProxy::HTTPProxyServer
         config = config.merge(Port: @mitm_port)
         mitm_server = EvilProxy::AgentProxyServer.new config
       rescue Errno::EADDRINUSE
+      rescue Errno::EINVAL => e
+        logger.error e.message
+        return
       ensure
         @mitm_port += 1
         return mitm_server if mitm_server
@@ -78,9 +82,9 @@ class EvilProxy::MITMProxyServer < EvilProxy::HTTPProxyServer
     raise RuntimeError, "No avaliable port found, stop retrying"
   end
 
-  def start_mitm_server unparsed_uri, host, port
-    if @mitm_servers[unparsed_uri]
-      return @mitm_servers[unparsed_uri].config[:Port]
+  def start_mitm_server host, port
+    if @mitm_servers[host]
+      return @mitm_servers[host].config[:Port]
     else
       cert, key = create_self_signed_cert host
       agent_config = self.config.merge(
@@ -92,7 +96,7 @@ class EvilProxy::MITMProxyServer < EvilProxy::HTTPProxyServer
       )
       mitm_server = retry_start_agent_server agent_config
 
-      @mitm_servers[unparsed_uri] = mitm_server
+      @mitm_servers[host] = mitm_server
 
       Thread.new do mitm_server.start end
       return mitm_server.config[:Port]
@@ -100,16 +104,17 @@ class EvilProxy::MITMProxyServer < EvilProxy::HTTPProxyServer
   end
 
   def do_MITM req, res
-    unparsed_uri = req.unparsed_uri
-    host, port = unparsed_uri.split(":")
+    host, port = req.unparsed_uri.split(":")
     port ||= 443
 
-    mitm_port = start_mitm_server unparsed_uri, host, port
+    mitm_port = start_mitm_server host, port
     req.unparsed_uri = "127.0.0.1:#{mitm_port}"
   end
 
   def do_CONNECT req, res
-    do_MITM req, res
+    if !@mitm_pattern || req.unparsed_uri =~ @mitm_pattern
+      do_MITM req, res
+    end
     super
   end
 

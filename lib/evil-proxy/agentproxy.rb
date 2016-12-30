@@ -49,6 +49,10 @@ class EvilProxy::AgentProxyServer < EvilProxy::HTTPProxyServer
     res.body = response.body
   end
 
-  alias_method :service, :proxy_service
+  def service req, res
+    fire :before_request, req
+    proxy_service req, res
+    fire :before_response, req, res
+  end
 
 end

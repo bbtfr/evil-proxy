@@ -5,8 +5,9 @@ require 'evil-proxy'
 require 'active_support/all'
 require 'colorize'
 
-PROXY = EvilProxy::MITMProxyServer.new Port: 8080, AccessLog: []
-# PROXY = EvilProxy::HTTPProxyServer.new Port: 8080, AccessLog: []
+Options = { BindAddress: '0.0.0.0', Port: 8080, AccessLog: [] }
+# PROXY = EvilProxy::MITMProxyServer.new Options
+PROXY = EvilProxy::HTTPProxyServer.new Options
 
 def puts_include str, match
   puts str.inspect.colorize(:red) if str && str.include?(match)

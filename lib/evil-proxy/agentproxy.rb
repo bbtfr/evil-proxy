@@ -3,8 +3,6 @@ require 'webrick/https'
 require 'webrick/httpproxy'
 require 'openssl'
 
-require 'pry-byebug'
-
 class EvilProxy::AgentProxyServer < EvilProxy::HTTPProxyServer
 
   def initialize_callbacks config

@@ -6,6 +6,8 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
 
   DEFAULT_CALLBACKS = Hash.new
 
+  SUPPORTED_METHODS = %w(GET HEAD POST PUT PATCH DELETE OPTIONS CONNECT).freeze
+
   def initialize config = {}, default = WEBrick::Config::HTTP
     initialize_callbacks config
     fire :when_initialize, config, default
@@ -66,13 +68,35 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     end
   end
 
+  def do_PUT(req, res)
+    perform_proxy_request(req, res) do |http, path, header|
+      http.put(path, req.body || '', header)
+    end
+  end
+
+  def do_DELETE(req, res)
+    perform_proxy_request(req, res) do |http, path, header|
+      http.delete(path, header)
+    end
+  end
+
+  def do_PATCH(req, res)
+    perform_proxy_request(req, res) do |http, path, header|
+      http.patch(path, req.body || '', header)
+    end
+  end
+
+  def do_OPTIONS(_req, res)
+    res['allow'] = SUPPORTED_METHODS.join(',')
+  end
+
   define_callback_methods :when_initialize
   define_callback_methods :when_start
   define_callback_methods :when_shutdown
   define_callback_methods :before_request
   define_callback_methods :before_response
 
-  %w(GET HEAD POST OPTIONS CONNECT).each do |method|
+  SUPPORTED_METHODS.each do |method|
     do_method = "do_#{method}".to_sym
     do_method_without_callbacks = "#{do_method}_without_callbacks".to_sym
     before_method = "before_#{method.downcase}".to_sym

@@ -86,8 +86,10 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
     end
   end
 
-  def do_OPTIONS(_req, res)
-    res['allow'] = SUPPORTED_METHODS.join(',')
+  def do_OPTIONS(req, res)
+    perform_proxy_request(req, res) do |http, path, header|
+      http.options(path, header)
+    end
   end
 
   define_callback_methods :when_initialize

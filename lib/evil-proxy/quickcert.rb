@@ -128,7 +128,7 @@ class QuickCert
     ]
     cert.add_extension ef.create_extension("authorityKeyIdentifier",
                                            "keyid:always,issuer:always")
-    cert.sign(keypair, OpenSSL::Digest::SHA1.new)
+    cert.sign(keypair, OpenSSL::Digest::SHA256.new)
 
     keypair_export = keypair.export(OpenSSL::Cipher::DES.new(:EDE3, :CBC), @ca_config[:password])
 
@@ -327,7 +327,7 @@ class QuickCert
                                 "OCSP;" << @ca_config[:ocsp_location])
     end
     cert.extensions = ex
-    cert.sign(ca_keypair, OpenSSL::Digest::SHA1.new)
+    cert.sign(ca_keypair, OpenSSL::Digest::SHA256.new)
 
     backup_cert_file = @ca_config[:new_certs_dir] + "/cert_#{cert.serial}.pem"
     puts "Writing backup cert to #{backup_cert_file}" if $DEBUG

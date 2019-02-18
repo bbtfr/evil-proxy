@@ -128,7 +128,7 @@ class QuickCert
     ]
     cert.add_extension ef.create_extension("authorityKeyIdentifier",
                                            "keyid:always,issuer:always")
-    cert.sign(keypair, OpenSSL::Digest::SHA1.new)
+    cert.sign(keypair, OpenSSL::Digest::SHA256.new)
 
     keypair_export = keypair.export(OpenSSL::Cipher::DES.new(:EDE3, :CBC), @ca_config[:password])
 
@@ -274,6 +274,7 @@ class QuickCert
     basic_constraint = nil
     key_usage = []
     ext_key_usage = []
+    alt_names = []
 
     case cert_config[:type]
     when "ca" then
@@ -286,6 +287,7 @@ class QuickCert
       basic_constraint = "CA:FALSE"
       key_usage << "digitalSignature" << "keyEncipherment"
       ext_key_usage << "serverAuth"
+      alt_names << "DNS: #{cert_config[:hostname]}"
     when "ocsp" then
       basic_constraint = "CA:FALSE"
       key_usage << "nonRepudiation" << "digitalSignature"
@@ -295,7 +297,7 @@ class QuickCert
       key_usage << "nonRepudiation" << "digitalSignature" << "keyEncipherment"
       ext_key_usage << "clientAuth" << "emailProtection"
     else
-      raise "unknonw cert type \"#{cert_config[:type]}\""
+      raise "unknown cert type \"#{cert_config[:type]}\""
     end
 
     ef = OpenSSL::X509::ExtensionFactory.new
@@ -326,8 +328,13 @@ class QuickCert
       ex << ef.create_extension("authorityInfoAccess",
                                 "OCSP;" << @ca_config[:ocsp_location])
     end
+
+    unless alt_names.empty? then
+      ex << ef.create_extension("subjectAltName", alt_names.join(","))
+    end
+
     cert.extensions = ex
-    cert.sign(ca_keypair, OpenSSL::Digest::SHA1.new)
+    cert.sign(ca_keypair, OpenSSL::Digest::SHA256.new)
 
     backup_cert_file = @ca_config[:new_certs_dir] + "/cert_#{cert.serial}.pem"
     puts "Writing backup cert to #{backup_cert_file}" if $DEBUG

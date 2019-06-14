@@ -52,7 +52,7 @@ EvilProxy::HTTPProxyServer.class_eval do
         end
         params["response"] = Hash.new.tap do |response|
           response["headers"] = res.header
-          response["body"] = res.body if req.body
+          response["body"] = res.body if res.body
           response["status"] = res.status
         end
       end

@@ -69,25 +69,25 @@ class EvilProxy::HTTPProxyServer < WEBrick::HTTPProxyServer
   end
 
   def do_PUT(req, res)
-    perform_proxy_request(req, res) do |http, path, header|
+    perform_proxy_request(req, res, req.class) do |http, path, header|
       http.put(path, req.body || '', header)
     end
   end
 
   def do_DELETE(req, res)
-    perform_proxy_request(req, res) do |http, path, header|
+    perform_proxy_request(req, res, req.class) do |http, path, header|
       http.delete(path, header)
     end
   end
 
   def do_PATCH(req, res)
-    perform_proxy_request(req, res) do |http, path, header|
+    perform_proxy_request(req, res, req.class) do |http, path, header|
       http.patch(path, req.body || '', header)
     end
   end
 
   def do_OPTIONS(req, res)
-    perform_proxy_request(req, res) do |http, path, header|
+    perform_proxy_request(req, res, req.class) do |http, path, header|
       http.options(path, header)
     end
   end
